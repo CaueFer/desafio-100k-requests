@@ -8,21 +8,24 @@ const createUserQueue = new Queue(queueName, {
   connection: redisConnection,
 });
 
-export async function addJobToQueue(jobName: string, data: Record<string, unknown>) {
+export async function addJobToQueue(
+  jobName: string,
+  data: Record<string, unknown>
+) {
   await createUserQueue.add(jobName, data);
 }
 
 // ==================== WORKERS
-const worker = new Worker(
+new Worker(
   queueName,
   async (job) => {
-    console.log("[DATA]: ", job.data);
+    console.log("[WORKER]: ", job.id, job.data);
   },
   { connection: redisConnection }
 );
 
 // ==================== QUEUE EVENTS
-const queueEvents = new QueueEvents("my-queue-name");
+const queueEvents = new QueueEvents(queueName);
 
 queueEvents.on("waiting", ({ jobId }) => {
   console.log(`A job with ID ${jobId} is waiting`);

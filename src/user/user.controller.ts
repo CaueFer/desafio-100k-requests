@@ -1,15 +1,19 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { IUser } from "../global.types";
+
+import { saveUserService } from "./user.service";
+import { FastifyRequestZod } from "../global.types";
 
 export async function saveUserController(
-  req: FastifyRequest,
+  req: FastifyRequestZod,
   reply: FastifyReply
 ) {
-  const newUser: IUser = req.body;
+  const newUser = req.body;
 
-  // VALIDAR USUARIO E JOGAR PRO BULLMQ
+  if (!newUser) reply.status(400).send({ message: "Dados inválidos" });
 
-  // RECEBE E ARMAZENA USUARIO NO BANCO
+  const { status, response } = await saveUserService(newUser);
+
+  reply.status(status).send(response);
 }
 
 export async function getSuperUsersController(
