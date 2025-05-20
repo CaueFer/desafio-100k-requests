@@ -12,14 +12,18 @@ export async function addJobToQueue(
   jobName: string,
   data: Record<string, unknown>
 ) {
-  await createUserQueue.add(jobName, data);
+  return await createUserQueue.add(jobName, data);
+}
+
+export async function getJob(jobId: string) {
+  return await createUserQueue.getJob(jobId);
 }
 
 // ==================== WORKERS
 new Worker(
   queueName,
   async (job) => {
-    console.log("[WORKER]: ", job.id, job.data);
+    return true;
   },
   { connection: redisConnection }
 );

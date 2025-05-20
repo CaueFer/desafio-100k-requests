@@ -1,8 +1,57 @@
-import { addJobToQueue } from "../lib/helpers/bullmq.helper";
+import { addJobToQueue, getJob } from "../lib/helpers/bullmq.helper";
 import { type UserSchema } from "../lib/schemas/user.schema";
 
-export async function saveUserService(newUser: UserSchema) {
-  await addJobToQueue("saveUser", newUser);
+export async function saveUserService(
+  newUser: UserSchema
+): Promise<{ status: number; response: unknown }> {
+  const job = await addJobToQueue("saveUser", newUser);
 
-  return { status: 200, response: { message: "User created successfully" } };
+  if (job == null) {
+    console.log("Failed to create a job");
+    return {
+      status: 500,
+      response: { message: "Failed to create a new user" },
+    };
+  }
+
+  return {
+    status: 200,
+    response: { message: "User add to queue successfully", job: job.id },
+  };
+}
+
+export async function getSaveUserStatusService(
+  id: string
+): Promise<{ status: number; response: unknown }> {
+  const job = await getJob(id);
+
+  if (!job)
+    return {
+      status: 400,
+      response: { message: "Invalid job id" },
+    };
+
+  const status = await job.getState();
+
+  let message = "";
+
+  switch (status) {
+    case "completed":
+      message = "User created sucessfully";
+      break;
+
+    case "failed":
+      message = "Failed to create user";
+      console.error("[JOB ERROR]:", job.failedReason);
+      break;
+
+    default:
+      message = "User not created yet";
+      break;
+  }
+
+  return {
+    status: 200,
+    response: { status, message },
+  };
 }
