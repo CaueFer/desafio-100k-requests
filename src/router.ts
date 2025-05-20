@@ -1,12 +1,22 @@
-import { FastifyInstance } from "fastify";
-
 import {
   getSuperUsersController,
   saveUserController,
-} from "./lib/user/user.controller";
+} from "./user/user.controller";
 
-export function Router(app: FastifyInstance) {
-  app.get("/superusers", getSuperUsersController);
+import { userSchema } from "./lib/helpers/zod.helper";
+import { FastifyInstanceTypedZod } from "./global.types";
 
-  app.post("/users", saveUserController);
+export function Router(app: FastifyInstanceTypedZod) {
+  app.get("/superusers", {}, getSuperUsersController);
+
+  app.post(
+    "/users",
+    {
+      schema: {
+        description: "Create new user",
+        body: userSchema,
+      },
+    },
+    saveUserController
+  );
 }

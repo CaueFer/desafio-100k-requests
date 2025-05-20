@@ -1,3 +1,12 @@
+import {
+  FastifyBaseLogger,
+  FastifyInstance,
+  RawReplyDefaultExpression,
+  RawRequestDefaultExpression,
+  RawServerDefault,
+} from "fastify";
+import { ZodTypeProvider } from "fastify-type-provider-zod";
+
 export interface IUser {
   id: string;
   name: string;
@@ -26,3 +35,11 @@ export interface Log {
 }
 
 export type Action = "login" | "logout";
+
+export type FastifyInstanceTypedZod = FastifyInstance<
+  RawServerDefault,
+  RawRequestDefaultExpression,
+  RawReplyDefaultExpression,
+  FastifyBaseLogger,
+  ZodTypeProvider
+>;

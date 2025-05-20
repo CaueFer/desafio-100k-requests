@@ -7,7 +7,7 @@ export async function saveUserController(
 ) {
   const newUser: IUser = req.body;
 
-    // VALIDAR USUARIO E JOGAR PRO BULLMQ
+  // VALIDAR USUARIO E JOGAR PRO BULLMQ
 
   // RECEBE E ARMAZENA USUARIO NO BANCO
 }
