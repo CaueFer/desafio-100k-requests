@@ -1,0 +1,26 @@
+services:
+  postgres_db:
+    image: postgres:17
+    container_name: postgres_db
+    restart: on-failure:3
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: api_100k_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+ 
+  redis:
+    image: redis:8
+    container_name: redis_cache
+    restart: on-failure:3
+    ports:
+      - "6379:6379" 
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:
