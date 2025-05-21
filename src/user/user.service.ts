@@ -7,7 +7,7 @@ export async function saveUserService(
   const job = await addJobToQueue("saveUser", newUser);
 
   if (job == null) {
-    console.log("Failed to create a job");
+    console.error("Failed to create a job");
     return {
       status: 500,
       response: { message: "Failed to create a new user" },
@@ -15,8 +15,11 @@ export async function saveUserService(
   }
 
   return {
-    status: 200,
-    response: { message: "User add to queue successfully", job: job.id },
+    status: 202,
+    response: {
+      message: "User add to queue successfully, wait for the result",
+      job: job.id,
+    },
   };
 }
 
@@ -45,8 +48,13 @@ export async function getSaveUserStatusService(
       console.error("[JOB ERROR]:", job.failedReason);
       break;
 
+    case "active":
+      message = "User is being created...";
+      console.error("[JOB ERROR]:", job.failedReason);
+      break;
+
     default:
-      message = "User not created yet";
+      message = "User not created yet...";
       break;
   }
 

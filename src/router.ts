@@ -17,7 +17,7 @@ export function Router(app: FastifyInstanceTypedZod) {
     {
       schema: {
         tags: ["user"],
-        description: "Get user status",
+        description: "Return user status, polling every 10 seconds to check the status of a createUserJob",
         params: z.object({
           id: z.string(),
         }),
