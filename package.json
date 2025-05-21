@@ -3,7 +3,7 @@
     "start": "tsx ./src/server.ts",
     "dev": "tsx watch ./src/server.ts"
   },
-  "types": "ESModules",
+  "type": "module",
   "dependencies": {
     "@fastify/cors": "^11.0.1",
     "@fastify/swagger": "^9.5.1",

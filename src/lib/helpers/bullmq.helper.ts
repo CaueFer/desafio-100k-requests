@@ -1,6 +1,6 @@
 import { Queue, QueueEvents, Worker } from "bullmq";
 
-import { redisConnection } from "../../redis";
+import { redisConnection } from "../../redis.js";
 
 const queueName = "createUser";
 
@@ -12,7 +12,14 @@ export async function addJobToQueue(
   jobName: string,
   data: Record<string, unknown>
 ) {
-  return await createUserQueue.add(jobName, data);
+  return await createUserQueue.add(jobName, data, {
+    removeOnComplete: {
+      age: 60000 * 1, // 1 minuto
+    },
+    removeOnFail: {
+      age: 60000 * 1440, // 1440 minutos -- 24 horas
+    },
+  });
 }
 
 export async function getJob(jobId: string) {
@@ -23,7 +30,7 @@ export async function getJob(jobId: string) {
 new Worker(
   queueName,
   async (job) => {
-    return true;
+    return "User created successfully";
   },
   { connection: redisConnection }
 );

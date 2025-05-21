@@ -1,5 +1,5 @@
-import { addJobToQueue, getJob } from "../lib/helpers/bullmq.helper";
-import { type UserSchema } from "../lib/schemas/user.schema";
+import { addJobToQueue, getJob } from "../lib/helpers/bullmq.helper.js";
+import { type UserSchema } from "../lib/schemas/user.schema.js";
 
 export async function saveUserService(
   newUser: UserSchema

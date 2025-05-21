@@ -9,7 +9,7 @@ import fastifySwaggerUi from "@fastify/swagger-ui";
 import fastifySwagger from "@fastify/swagger";
 import fastifyCors from "@fastify/cors";
 
-import { Router } from "./router";
+import { Router } from "./router.js";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 

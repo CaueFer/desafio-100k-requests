@@ -1,10 +1,13 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 
-import { getSaveUserStatusService, saveUserService } from "./user.service";
-import { FastifyRequestZod } from "../global.types";
+import {
+  getSaveUserStatusService as getUserJobStatusService,
+  saveUserService,
+} from "./user.service.js";
+import { userSchema } from "../lib/schemas/user.schema.js";
 
 export async function saveUserController(
-  req: FastifyRequestZod,
+  req: FastifyRequest<{ Body: typeof userSchema._type }>,
   reply: FastifyReply
 ) {
   const newUser = req.body;
@@ -16,15 +19,15 @@ export async function saveUserController(
   reply.status(status).send(response);
 }
 
-export async function getSaveUserStatusController(
-  req: FastifyRequestZod,
+export async function getUserJobStatusController(
+  req: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply
 ) {
   const { id } = req.params as { id: string };
 
   if (!id) reply.status(400).send({ message: "Dados inválidos" });
 
-  const { status, response } = await getSaveUserStatusService(id);
+  const { status, response } = await getUserJobStatusService(id);
 
   reply.status(status).send(response);
 }
