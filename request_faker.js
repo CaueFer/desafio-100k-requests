@@ -3,7 +3,7 @@ import fs from "node:fs";
 const jsonString = fs.readFileSync("./100k-usuarios.json", "utf-8");
 const data = JSON.parse(jsonString);
 
-const LIMIT = 500; // LIMITAR A QUANTIDADE DE REQUESTS
+const LIMIT = 1350; // LIMITAR A QUANTIDADE DE REQUESTS - CUIDADO COM A QUANTIDADE!!!
 
 for (let i = 0; i < Math.min(LIMIT, data.length); i++) {
   console.log("Sended ", i);
@@ -17,5 +17,7 @@ async function createUser(user) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(user),
-  });
+  })
+    .then()
+    .catch((err) => console.error(err));
 }

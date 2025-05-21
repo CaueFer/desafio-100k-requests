@@ -15,3 +15,9 @@ export type FastifyInstanceTypedZod = FastifyInstance<
   FastifyBaseLogger,
   ZodTypeProvider
 >;
+
+export interface DefaultResponse {
+  message?: string;
+  id?: string;
+  job?: string;
+}

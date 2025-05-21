@@ -1,5 +1,6 @@
-import { delay, Queue, QueueEvents, Worker } from "bullmq";
+import { delay, Job, Queue, QueueEvents, Worker } from "bullmq";
 
+import { UserSchema } from "../schemas/user.schema.js";
 import { redisConnection } from "../../config/redis.js";
 
 const queueName = "createUser";
@@ -8,18 +9,46 @@ const createUserQueue = new Queue(queueName, {
   connection: redisConnection,
 });
 
-export async function addJobToQueue(
-  jobName: string,
-  data: Record<string, unknown>
-) {
+// ==================== BATCH
+let timeout: NodeJS.Timeout | null = null;
+let batch: UserSchema[] = [];
+export async function saveBatches(newUser: UserSchema) {
+  batch.push(newUser);
+
+  if (timeout) clearTimeout(timeout);
+
+  if (batch.length >= 500) {
+    console.log("[BATCH]", batch.length);
+    const batchToSave = [...batch];
+    batch = [];
+
+    const job = await addJobToQueue("saveUser", batchToSave);
+
+    return job;
+  }
+
+  return new Promise<Job<any, any, string>>((resolve) => {
+    timeout = setTimeout(async () => {
+      if (batch.length > 0) {
+        console.log("[BATCH]", batch.length);
+        const batchToSave = [...batch];
+        batch = [];
+        const job = await addJobToQueue("saveUser", batchToSave);
+
+        resolve(job);
+      }
+    }, 1000); // 1 segundo
+  });
+}
+
+// ==================== JOBS
+export async function addJobToQueue(jobName: string, data: UserSchema[]) {
   return await createUserQueue.add(jobName, data, {
     removeOnComplete: {
-      //age: 60 * 1, // 1 minuto
-      age: 5,
+      age: 60 * 1, // 1 minuto
     },
     removeOnFail: {
-      age: 5,
-      //age: 60 * 1440, // 1440 minutos -- 24 horas
+      age: 60 * 1440, // 1440 minutos -- 24 horas
     },
   });
 }

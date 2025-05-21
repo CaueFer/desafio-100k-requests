@@ -1,23 +1,26 @@
-import { addJobToQueue, getJob } from "../lib/helpers/bullmq.helper.js";
+import { getJob, saveBatches } from "../lib/helpers/bullmq.helper.js";
 import { type UserSchema } from "../lib/schemas/user.schema.js";
+import { DefaultResponse } from "../global.types.js";
 
 export async function saveUserService(
   newUser: UserSchema
-): Promise<{ status: number; response: unknown }> {
-  const job = await addJobToQueue("saveUser", newUser);
+): Promise<{ status: number; response: DefaultResponse }> {
+  const job = await saveBatches(newUser);
 
-  if (job == null) {
+  if (!job) {
     console.error("Failed to create a job");
     return {
       status: 500,
-      response: { message: "Failed to create a new user" },
+      response: {
+        message: "Failed to insert a new user into queue, try again.",
+      },
     };
   }
 
   return {
     status: 202,
     response: {
-      message: "User add to queue successfully, wait for the result",
+      message: "User add to queue successfully, wait for the result.",
       job: job.id,
     },
   };
