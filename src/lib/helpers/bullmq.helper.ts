@@ -1,6 +1,6 @@
 import { delay, Queue, QueueEvents, Worker } from "bullmq";
 
-import { redisConnection } from "../../redis.js";
+import { redisConnection } from "../../config/redis.js";
 
 const queueName = "createUser";
 
@@ -51,9 +51,11 @@ const queueEvents = new QueueEvents(queueName);
 // });
 
 queueEvents.on("completed", ({ jobId, returnvalue }) => {
-  console.log(`[COMPLETED] ${jobId} has completed and returned ${returnvalue}`);
+  console.log(
+    `[COMPLETED] ✅ ${jobId} has completed and returned ${returnvalue}`
+  );
 });
 
 queueEvents.on("failed", ({ jobId, failedReason }) => {
-  console.log(`[FAILED] ${jobId} has failed with reason ${failedReason}`);
+  console.log(`[FAILED] ❌ ${jobId} has failed with reason ${failedReason}`);
 });
