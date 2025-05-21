@@ -10,26 +10,38 @@ export async function saveUserController(
   req: FastifyRequest<{ Body: typeof userSchema._type }>,
   reply: FastifyReply
 ) {
-  const newUser = req.body;
+  try {
+    const newUser = req.body;
 
-  if (!newUser) reply.status(400).send({ message: "Dados inválidos" });
+    if (!newUser) reply.status(400).send({ message: "Dados inválidos" });
 
-  const { status, response } = await saveUserService(newUser);
+    const { status, response } = await saveUserService(newUser);
 
-  reply.status(status).send(response);
+    reply.status(status).send(response);
+  } catch (err) {
+    console.log("[Error saveUserController]: ", err);
+
+    reply.status(500).send({ message: "Ocorreu um erro, tenta novamente." });
+  }
 }
 
 export async function getUserJobStatusController(
   req: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply
 ) {
-  const { id } = req.params as { id: string };
+  try {
+    const { id } = req.params as { id: string };
 
-  if (!id) reply.status(400).send({ message: "Dados inválidos" });
+    if (!id) reply.status(400).send({ message: "Dados inválidos" });
 
-  const { status, response } = await getUserJobStatusService(id);
+    const { status, response } = await getUserJobStatusService(id);
 
-  reply.status(status).send(response);
+    reply.status(status).send(response);
+  } catch (err) {
+    console.log("[Error getUserJobStatusController]: ", err);
+
+    reply.status(500).send({ message: "Ocorreu um erro, tenta novamente." });
+  }
 }
 
 export async function getSuperUsersController(
@@ -38,4 +50,10 @@ export async function getSuperUsersController(
 ) {
   // Filtro: score >= 900 e active = true
   // Retorna os dados e o tempo de processamento da requisição.
+  try {
+  } catch (err) {
+    console.log("[Error getSuperUsersController]: ", err);
+
+    reply.status(500).send({ message: "Ocorreu um erro, tenta novamente." });
+  }
 }
