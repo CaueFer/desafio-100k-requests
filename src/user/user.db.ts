@@ -4,70 +4,74 @@ import app from "../server.js";
 import { type UserSchema } from "../lib/schemas/user.schema.js";
 
 export async function saveUsersDb(newUsers: UserSchema[]) {
-  const teams = newUsers.map((u) => u.team);
+  const usersIds = await saveUser(newUsers);
+
+  if (usersIds.length < 1) return "Users already added.";
+
+  const addedUsers = newUsers.filter((u) => usersIds.includes(u.id));
+  const teams = addedUsers.map((u) => ({ ...u.team, userId: u.id }));
 
   const teamIds = await saveTeams(teams);
-  console.log("Teamids", teamIds);
 
-  // const projects = newUsers.flatMap((u, i) =>
-  //   u.team.projects.map((p) => ({ ...p, teamId: teamIds[i] }))
-  // );
+  const teamProjects = teams.flatMap((t, i) =>
+    t.projects.map((p) => ({ ...p, teamId: teamIds[i] }))
+  );
 
-  // await saveProjects(projects);
+  const projectsIds = await saveProjects(teamProjects);
 
-  // const usersIds = await saveUser(newUsers);
+  const logsWithUserId = addedUsers.flatMap((u) =>
+    u.logs.map((log) => ({ ...log, userId: u.id }))
+  );
 
-  // adicionar logs com id do usuario
+  const logsIds = await saveLogs(logsWithUserId);
 
-  return "Todos os usuários foram adicionados com sucesso.";
+  return `
+  Users added successfully.
+
+  Added User: ${usersIds.length}
+  Added Teams: ${teamIds.length}
+  Added Projeccts: ${projectsIds.length}
+  Added Logs: ${logsIds.length}
+  `;
 }
 
-async function saveTeams(teams: UserSchema["team"][]): Promise<number[]> {
+async function saveTeams(
+  teams: {
+    userId: string;
+    name: string;
+    leader: boolean;
+    projects: {
+      name: string;
+      completed: boolean;
+      id?: number | undefined;
+    }[];
+    id?: number | undefined;
+  }[]
+): Promise<number[]> {
   try {
-    let count = 0;
     const teamPlaceholder = teams
       .map((_, i) => {
-        const fields = 2;
-
-        count = i * fields + 2;
-        return `($${i * fields + 1}, $${i * fields + 2})`;
+        const fields = 3;
+        return `($${i * fields + 1}, $${i * fields + 2}, $${i * fields + 3})`;
       })
       .join(", ");
-    const flatTeams = teams.flatMap((t) => [t.name, t.leader]);
 
-    const teamNamesPlaceholders = teams
-      .map((_, i) => `($${i + 1 + count})`)
-      .join(", ");
-    const teamNames = teams.flatMap((t) => [t.name]);
+    const flatTeams = teams.flatMap((t) => [t.name, t.leader, t.userId]);
 
     const createQuery: QueryResult = await app.pg.query(
       `
-        WITH updated_teams AS (
           INSERT INTO team
-              (name, leader)
+              (name, leader, user_id)
           VALUES
               ${teamPlaceholder}
-          ON CONFLICT (name)
-          DO UPDATE
-            SET leader = EXCLUDED.leader
-          RETURNING name
-        ),
-        team_names AS (
-          select * from (
-            VALUES
-              ${teamNamesPlaceholders}
-          ) AS v(name)
-        )
-        select
-          id
-        from team
-        where
-          name IN (SELECT name FROM team_names)
+          ON CONFLICT (name, user_id)
+          DO UPDATE SET leader = EXCLUDED.leader
+          returning id
     `,
-      [...flatTeams, ...teamNames]
+      [...flatTeams]
     );
 
-    return createQuery.rows;
+    return createQuery.rows.map((r) => r.id);
   } catch (err) {
     console.error("Erro ao criar time: ", err);
     throw err;
@@ -80,38 +84,45 @@ async function saveProjects(
     name: string;
     completed: boolean;
   }[]
-) {
+): Promise<number[]> {
   try {
     const projectsPlaceholder = projects
       .map((_, i) => {
         const fields = 3;
 
-        return `$${i * fields + 1}, $${i * fields + 2}, $${i * fields + 3}`;
+        return `($${i * fields + 1}, $${i * fields + 2}, $${i * fields + 3})`;
       })
       .join(", ");
 
-    const flatProjects = projects.flatMap((p) => [p.name, p.completed, teamId]);
+    const flatProjects = projects.flatMap((p) => [
+      p.name,
+      p.completed,
+      p.teamId,
+    ]);
 
-    await app.pg.query(
+    const query = await app.pg.query(
       `
         INSERT INTO project
           (name, completed, team_id)
         VALUES
-          (${projectsPlaceholder})
+          ${projectsPlaceholder}
+        returning id
       `,
       [...flatProjects]
     );
+
+    return query.rows.map((r) => r.id);
   } catch (err) {
-    console.error("Error ao salvar Projeto", err);
+    console.error("Error ao salvar Projetos", err);
     throw err;
   }
 }
 
-async function saveUser(newUsers: UserSchema[]): Promise<number[]> {
+async function saveUser(newUsers: UserSchema[]): Promise<string[]> {
   try {
     const valuesPlaceholder = newUsers
       .map((_, j) => {
-        const userFields = 5;
+        const userFields = 6;
         let placeholder: string[] = [];
         for (let i = 1; i <= userFields; i++) {
           placeholder.push(`$${j * userFields + i}`);
@@ -121,6 +132,7 @@ async function saveUser(newUsers: UserSchema[]): Promise<number[]> {
       .join(", ");
 
     const flatedUsers = newUsers.flatMap((u) => [
+      u.id,
       u.name,
       u.age,
       u.country,
@@ -133,19 +145,56 @@ async function saveUser(newUsers: UserSchema[]): Promise<number[]> {
     const insertUserQuery = await app.pg.query(
       `
         INSERT INTO "user"
-            (name, age, country, score, active)
+            (id, name, age, country, score, active)
         VALUES
             ${valuesPlaceholder}
+        ON CONFLICT (id)
+        DO NOTHING
         returning id
         `,
       flatedUsers
     );
 
-    return insertUserQuery.rows;
+    return insertUserQuery.rows.map((r) => r.id);
   } catch (err) {
-    console.error(err);
-    throw new Error("Error save user");
+    console.error("[Error on func saveUser]", err);
+    throw new Error("Error saving user");
   }
 }
 
-async function saveLogs(logs: UserSchema["logs"], userId: number) {}
+async function saveLogs(
+  logs: {
+    userId: string;
+    date: string;
+    action: "login" | "logout";
+    id?: number | undefined;
+  }[]
+): Promise<number[]> {
+  try {
+    const logsPlaceholder = logs.map((_, i) => {
+      const fields = 3;
+
+      return `($${i * fields + 1}::uuid, $${i * fields + 2}, $${
+        i * fields + 3
+      })`;
+    });
+
+    const flatLog = logs.flatMap((log) => [log.userId, log.action, log.date]);
+
+    const insertLogsQuery = await app.pg.query(
+      `
+      INSERT INTO
+        log (user_id, action, date)
+      VALUES
+        ${logsPlaceholder}
+      returning id
+      `,
+      [...flatLog]
+    );
+
+    return insertLogsQuery.rows.map((r) => r.id);
+  } catch (err) {
+    console.error("Error save logs", err);
+    throw new Error("Erro saveLogs");
+  }
+}

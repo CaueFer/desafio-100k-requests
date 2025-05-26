@@ -3,6 +3,7 @@ import { delay, Job, Queue, QueueEvents, Worker } from "bullmq";
 import { UserSchema } from "../schemas/user.schema.js";
 import { redisConnection } from "../../config/redis.js";
 import { saveUsersDb } from "../../user/user.db.js";
+import { hrtime } from "node:process";
 
 const queueName = "createUser";
 
@@ -62,14 +63,17 @@ export async function getJob(jobId: string) {
 new Worker(
   queueName,
   async (job) => {
-    await delay(1000); // 1 sec fake delay
+    const start = hrtime();
 
     const newUsers: UserSchema[] = job.data;
 
     // VALIDAR COMO O  JOB ENTENDE Q NAO FUNCIONOU
     const response = await saveUsersDb(newUsers);
 
-    return response;
+    const end = hrtime(start);
+    const finalTIme = end[0] * 1000 + end[1] / 1e6;
+    return `${response}
+     Timer: ${finalTIme.toFixed(2)} ms`;
   },
   { connection: redisConnection }
 );
@@ -87,7 +91,7 @@ const queueEvents = new QueueEvents(queueName);
 
 queueEvents.on("completed", ({ jobId, returnvalue }) => {
   console.log(
-    `[COMPLETED] ✅ ${jobId} has completed and returned ${returnvalue}`
+    `[COMPLETED] ✅ JOB:${jobId} has completed and returned ${returnvalue}`
   );
 });
 
