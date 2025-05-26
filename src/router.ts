@@ -1,12 +1,38 @@
-import { FastifyInstance } from "fastify";
+import { z } from "zod";
 
 import {
-  getSuperUsersController,
+  getUserJobStatusController,
   saveUserController,
-} from "./lib/user/user.controller";
+} from "./user/user.controller.js";
 
-export function Router(app: FastifyInstance) {
-  app.get("/superusers", getSuperUsersController);
+import { userSchema } from "./lib/schemas/user.schema.js";
+import { FastifyInstanceTypedZod } from "./global.types.js";
 
-  app.post("/users", saveUserController);
+export function Router(app: FastifyInstanceTypedZod) {
+  app.get(
+    "/user/:id",
+    {
+      schema: {
+        tags: ["user"],
+        description:
+          "Return user status, polling every 10 seconds to check the status of a createUserJob",
+        params: z.object({
+          id: z.string(),
+        }),
+      },
+    },
+    getUserJobStatusController
+  );
+
+  app.post(
+    "/user",
+    {
+      schema: {
+        tags: ["user"],
+        description: "Create a createUserJob and enqueue it in the Jobs queue",
+        body: userSchema,
+      },
+    },
+    saveUserController
+  );
 }
