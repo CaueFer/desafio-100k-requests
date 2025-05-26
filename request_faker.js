@@ -1,12 +1,24 @@
 import fs from "node:fs";
+import { fetch, Agent } from "undici";
+import * as readline from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
 
 const jsonString = fs.readFileSync("./100k-usuarios.json", "utf-8");
 const data = JSON.parse(jsonString);
 
-const LIMIT = 4; // LIMITAR A QUANTIDADE DE REQUESTS - CUIDADO COM A QUANTIDADE!!!
+let MAX_LIMIT = 5000; // LIMITAR A QUANTIDADE DE REQUESTS - CUIDADO COM A QUANTIDADE!!!
 
-for (let i = 0; i < Math.min(LIMIT, data.length); i++) {
-  console.log("Sended ", i);
+const rl = readline.createInterface({ input, output });
+const LIMIT = await rl.question("Quantidade de requests (MAX 5000): ");
+rl.close();
+
+const agent = new Agent({
+  keepAliveTimeout: 60_000,
+  keepAliveMaxTimeout: 300_000,
+});
+
+for (let i = 0; i < Math.min(data.length, LIMIT, MAX_LIMIT); i++) {
+  console.log("Sended ", i + 1);
   createUser(data[i]);
 }
 
@@ -17,7 +29,9 @@ async function createUser(user) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(user),
+    dispatcher: agent,
   })
-    .then(async (res) => console.log(await res.json()))
+    .then((res) => res.json())
+    .then((data) => console.log(data))
     .catch((err) => console.error(err));
 }
