@@ -48,17 +48,3 @@ export async function getUserJobStatusController(
     reply.status(500).send({ message: "Ocorreu um erro, tenta novamente." });
   }
 }
-
-export async function getSuperUsersController(
-  req: FastifyRequest,
-  reply: FastifyReply
-) {
-  // Filtro: score >= 900 e active = true
-  // Retorna os dados e o tempo de processamento da requisição.
-  try {
-  } catch (err) {
-    console.log("[Error getSuperUsersController]: ", err);
-
-    reply.status(500).send({ message: "Ocorreu um erro, tenta novamente." });
-  }
-}
