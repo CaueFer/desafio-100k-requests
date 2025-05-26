@@ -5,6 +5,7 @@ import {
   saveUserService,
 } from "./user.service.js";
 import { userSchema } from "../lib/schemas/user.schema.js";
+import { hrtime } from "node:process";
 
 export async function saveUserController(
   req: FastifyRequest<{ Body: typeof userSchema._type }>,
@@ -30,13 +31,17 @@ export async function getUserJobStatusController(
   reply: FastifyReply
 ) {
   try {
+    const start = hrtime();
     const { id } = req.params as { id: string };
 
     if (!id) reply.status(400).send({ message: "Dados inválidos" });
 
     const { status, response } = await getUserJobStatusService(id);
 
-    reply.status(status).send(response);
+    const [seconds, nanosec] = hrtime(start);
+    const finalTimer = seconds * 1000 + nanosec / 1e6;
+
+    reply.status(status).send({ ...response, timer: finalTimer });
   } catch (err) {
     console.log("[Error getUserJobStatusController]: ", err);
 

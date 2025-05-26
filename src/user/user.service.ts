@@ -28,7 +28,7 @@ export async function saveUserService(
 
 export async function getSaveUserStatusService(
   id: string
-): Promise<{ status: number; response: unknown }> {
+): Promise<{ status: number; response: Record<string, unknown> }> {
   const job = await getJob(id);
 
   if (!job)
