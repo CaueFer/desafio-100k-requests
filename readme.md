@@ -2,11 +2,11 @@
 
 🇧🇷
 Desafio de Backend:
-Projetar e implementar uma infraestrutura escalável capaz de suportar uma carga simultânea de 100 mil requisições concorrentes, realizando operações de inserção de dados em banco de dados e retornando uma resposta de status de conclusão para cada solicitação de forma eficiente e confiável.
+Projetar e implementar uma infraestrutura capaz de suportar uma carga de 100 mil requisições concorrentes, realizando operações de inserção de dados em banco de dados e retornando uma resposta de status de conclusão para cada solicitação de forma eficiente e confiável.
 
 🇺🇸
 Backend Challenge:
-Design and implement a scalable infrastructure capable of handling 100,000 concurrent requests, performing data insertion into a database, and returning a completion status response for each request in an efficient and reliable manner.
+Design and implement a infrastructure capable of handling 100,000 concurrent requests, performing data insertion into a database, and returning a completion status response for each request in an efficient and reliable manner.
 
 ---
 
