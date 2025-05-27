@@ -1,4 +1,4 @@
-# 🔥 100K Requests at the same time (Challeng) - Complete Technical Overview
+# 🔥 100K Requests (Challenge) - Complete Technical Overview
 
 🇧🇷
 Desafio de Backend:
